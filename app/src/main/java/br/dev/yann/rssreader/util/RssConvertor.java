@@ -1,57 +1,36 @@
 package br.dev.yann.rssreader.util;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
-import javax.ejb.Stateful;
-
-import br.dev.yann.rssreader.factory.RequestXmlFromHttpFactory;
+import br.dev.yann.rssreader.job.RequestXmlFromHttp;
 import br.dev.yann.rssreader.model.Rss;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
-@Stateful
-//TODO @Asynchronous
 public class RssConvertor {
+  private static RequestXmlFromHttp job = new RequestXmlFromHttp();
 
-  private static RequestXmlFromHttpFactory factory = new RequestXmlFromHttpFactory();;
   private static JAXBContext context;
 
-
   private static String prepareURI(String uri) {
-    return uri.replace(" ", "");
+          return uri.replaceAll("\\s+", "");
   }
 
-  //TODO melhorar isso
-  private static String treatXml(String treatable) {
-    ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(treatable);
-    String utf8EncodedString = StandardCharsets.UTF_8.decode(byteBuffer).toString();
+  public static Rss get(String url) {
+    try {
 
-    String treated = utf8EncodedString.replaceAll("\uFEFF", "").replaceAll("\\R+", "").replaceAll("\"xmlns","\" xmlns");
+      context = JAXBContext.newInstance(new Class[] { Rss.class });
 
-    return treated;
+      String treated = prepareURI(url);
 
-  }
+      Rss rss = (Rss)context.createUnmarshaller().unmarshal(job.getXml(treated));
 
-  public static Rss get(String url)  {
-      try {
-        context = JAXBContext.newInstance(Rss.class);
-        String treatable = prepareURI(url);
-        String treated = treatXml(factory.getXml(treatable));
-        Rss rss  = (Rss) context.createUnmarshaller().unmarshal(new StringReader(treated));
+      rss.setOriginalLink(url);
+
       return rss;
-      } catch (JAXBException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-     return null;
+
+    } catch (JAXBException | IOException e) {
+      return null;
+    }
   }
 }
-
-
-

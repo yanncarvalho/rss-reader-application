@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.ejb.Stateful;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -16,14 +18,13 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 
-import org.bouncycastle.util.encoders.Base64;
-
 import br.dev.yann.rssreader.entity.User;
 
+@Stateful
 public class JWTToken {
 
   private static final String ISSUER = "Rss_Reader_App";
-  private final byte[] SECRET = Base64.decode("JDMxJDE2JFp5NzNqNzItOTd5cjNLRm9DN0hXYVQtelRySlZJTEdMekhEVDZWeWxhV0E=");
+  private final byte[] SECRET = "JDMxJDE2JFp5NzNqNzItOTd5cjNLRm9DN0hXYVQtelRySlZJTEdMekhEVDZWeWxhV0E=".getBytes();
 
   public String getToken(User user) {
 
@@ -34,7 +35,7 @@ public class JWTToken {
       var header = new JWSHeader.Builder(JWSAlgorithm.HS256).build();
       var claims = new JWTClaimsSet.Builder()
                                     .issuer(ISSUER)
-                                    .subject(Long.toString(user.getId()))
+                                    .claim("usr", user.getId()+Integer.MAX_VALUE)
                                     .expirationTime(new Date(tenDaysFromNow))
                                     .build();
 
@@ -71,8 +72,24 @@ public class JWTToken {
         return null;
       }
 
+      Long id = claims.getLongClaim("usr");
+
+      if(id == null){
+        return null;
+      } else{
+        id -= Integer.MAX_VALUE;
+      }
+
+      var jsonObject  = claims.toJSONObject();
+
+      if(jsonObject.size() != 3){
+        return null;
+      }
+
+
       if (isTokenValid(token, SECRET)) {
-        return claims.toJSONObject();
+        jsonObject.put("usr",  id);
+        return jsonObject;
       }
 
     } catch (ParseException | JOSEException e) {

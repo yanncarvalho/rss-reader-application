@@ -14,22 +14,13 @@ war {
     baseName = 'rssreader'
 }
 
-task deploy(type: Copy) {
-    from war
-    String jboss = System.getenv("JBOSS_HOME")
-    String url = "${jboss.replace("/", "\\")}\\standalone\\deployments"
-    into "${url}"
-    println "Save deploy path: ${url}"
-}
-
-
 dependencies {
     implementation 'com.google.guava:guava:30.1.1-jre'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'org.glassfish.jaxb:jaxb-runtime:3.0.2'
     implementation 'com.nimbusds:nimbus-jose-jwt:9.19'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Alpha3'
 
     compileOnly 'jakarta.platform:jakarta.jakartaee-api:8.0.0'
     compileOnly 'org.projectlombok:lombok:1.18.22'
@@ -38,7 +29,7 @@ dependencies {
 
 	testCompileOnly 'org.projectlombok:lombok:1.18.22'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
 }
 
 application {

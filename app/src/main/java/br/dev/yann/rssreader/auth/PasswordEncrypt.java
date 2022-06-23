@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+
 public class PasswordEncrypt {
 
   public static final String ID = "$31$";

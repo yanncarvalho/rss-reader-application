@@ -1,10 +1,9 @@
 package br.dev.yann.rssreader.entity;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -12,39 +11,56 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import br.dev.yann.rssreader.auth.PasswordEncrypt;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+
+@ToString
+@NoArgsConstructor
 @Entity(name = "users")
 public class User {
 
+	public User(String name, String password, String username) {
+    this.name = name;
+    this.setPassword(password);
+    this.username = username;
+	}
+
   @Id
+  @Getter
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Getter @Setter
   private String username;
 
+  @Lob
   private String password;
 
+  @Getter @Setter
   private String name;
 
+  @Getter
   @Column(name = "is_admin")
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-   private boolean admin = false;
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY, value ="isAdmin")
+  private boolean admin = false;
 
-  @ElementCollection(fetch = FetchType.LAZY)
-  @CollectionTable(name="rss_urls", joinColumns = @JoinColumn(name="id") )
-  private List<String> urls = new ArrayList<>();
+  @ElementCollection(fetch = FetchType.EAGER)
+  private Set<String> urls = new HashSet<>();
 
-  public User() {
-  }
 
-  public List<String> getUrlsRss() {
-    return Collections.unmodifiableList(this.urls);
+  @JsonIgnore
+  public Set<String> getUrlsRss() {
+    return Collections.unmodifiableSet(this.urls);
   }
 
   public boolean removeUrlRss(String url) {
@@ -55,19 +71,20 @@ public class User {
     return this.urls.contains(url);
   }
 
-  public boolean containsAllUrlRss(List<String> urls) {
+  public boolean containsAllUrlRss(Set<String> urls) {
     return this.urls.containsAll(urls);
   }
 
   public boolean addUrlRss(String url) {
-    return this.urls.add(url);
+     return this.urls.add(url);
+
   }
 
-  public boolean addAllUrlRss (List<String> urls){
+  public boolean addAllUrlRss(Set<String> urls){
     return this.urls.addAll(urls);
   }
 
-  public boolean removeAllUrlsRss (List<String> urls){
+  public boolean removeAllUrlsRss (Set<String> urls){
     return this.urls.removeAll(urls);
   }
 
@@ -75,41 +92,9 @@ public class User {
      this.urls.clear();
   }
 
-  public boolean isAdmin(){
-    return this.admin;
-  }
-
-  public void setAdmin(boolean admin){
-    this.admin = admin;
-  }
-
-
   public void setPassword(String password) {
     this.password = PasswordEncrypt.hash(password);
   }
-
-  public String getUsername() {
-    return username;
-  }
-
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public Long getId() {
-    return id;
-  }
-
 
    public boolean authenticate(String password) {
     return PasswordEncrypt.authenticate(password, this.password);

@@ -2,7 +2,7 @@ package br.dev.yann.rssreader.service;
 
 import java.util.List;
 
-import javax.ejb.Stateful;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -10,7 +10,7 @@ import br.dev.yann.rssreader.dao.AuthAdminDao;
 import br.dev.yann.rssreader.dto.UserDTO;
 import br.dev.yann.rssreader.entity.User;
 
-@Stateful
+@RequestScoped
 public class AuthAdminService {
 
   @Inject
@@ -21,12 +21,12 @@ public class AuthAdminService {
     return dao.findAllUsers();
   }
 
-  public void updateUserAsAdmin (UserDTO.Request.Update user){
-    dao.update(user);
+  public boolean updateUserAsAdmin (UserDTO.Request.Update user){
+    return (dao.update(user) != null);
   }
 
-  public void deleteUserAsAdmin(Long id) {
-    dao.delete(id);
+  public boolean deleteUserAsAdmin(Long id) {
+    return dao.delete(id);
   }
   public List<Long> findAllAdminsIds() {
     return dao.findAllAdminsIds();
@@ -45,14 +45,8 @@ public class AuthAdminService {
     return dao.findById(id);
   }
 
-  public User findUserByUsernameAsAdmin(String username) {
-    return dao.findByUsername(username);
-  }
-
-  public boolean hasUsername(String username, Long id) {
+  public boolean hasUsernameWithOriginalId(String username, Long id) {
     User findByUsername = dao.findByUsername(username);
     return (findByUsername != null && findByUsername.getId() != id);
   }
-
-
 }

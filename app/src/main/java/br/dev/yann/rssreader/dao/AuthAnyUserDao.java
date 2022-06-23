@@ -4,14 +4,13 @@ import javax.ejb.Stateless;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import br.dev.yann.rssreader.dto.UserDTO;
 import br.dev.yann.rssreader.entity.User;
 
 @Stateless
 @Named("AuthAnyUser")
-@SuppressWarnings({"unchecked"})
 public class AuthAnyUserDao {
 
   @PersistenceContext(name = "rssreader")
@@ -21,27 +20,42 @@ public class AuthAnyUserDao {
     manager.persist(user);
   }
 
+  public UserDTO.Response.FindAnyUser findByIdReponseAnyUser(Long id){
+    return new UserDTO.Response.FindAnyUser(this.findById(id));
+  }
+
   public User findById(long id) {
     return manager.find(User.class, id);
   }
 
-  public void delete(Long id) {
-    manager.remove(this.findById(id));
+  public boolean delete(Long id) {
+    User user = this.findById(id);
+    if(user == null){
+      return false;
+    }
+    manager.remove(user);
+    return true;
+
   }
 
   public User update(UserDTO.Request.Update user) {
 
-    User merge = manager.merge(this.findById(user.getId()));
+    User findById = this.findById(user.getId());
+    if(findById == null){
+        return null;
+    }
+    User merge = manager.merge(findById);
 
-    if (user.getName() != null) {
+
+    if (user.hasName()) {
       merge.setName(user.getName());
     }
 
-    if (user.getUsername() != null) {
+    if (user.hasUsername()) {
       merge.setUsername(user.getUsername());
     }
 
-    if (user.getPassword() != null) {
+    if (user.hasPassword()) {
       merge.setPassword(user.getPassword());
     }
 
@@ -51,8 +65,8 @@ public class AuthAnyUserDao {
   }
 
   public User findByUsername (String username) {
-    Query query = manager.createQuery("SELECT u FROM users u WHERE u.username = :username");
+    TypedQuery<User> query = manager.createQuery("SELECT u FROM users u WHERE u.username = :username", User.class);
     query.setParameter("username", username);
-    return (User) query.getResultStream().findFirst().orElse(null);
+    return query.getResultStream().findFirst().orElse(null);
   }
 }
